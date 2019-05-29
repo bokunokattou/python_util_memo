@@ -2,9 +2,10 @@ class Ccomptex:
     def __init__(self,AtexPath,BtexPath):
         self.Af = open(AtexPath)
         self.Bf = open(BtexPath)
-        self.splitfor = " "
+        self.splitfor = "\n"
         self.AtexArr = []
         self.BtexArr = []
+        self.flag = False
     def __del__(self):
         self.Af.close()
         self.Bf.close()
@@ -18,8 +19,11 @@ class Ccomptex:
             if str(a) == str(b):
                 pass
             else:
+                self.flag = True
                 print("A:",str(a))
                 print("B:",str(b))
+        if ~self.flag:
+            print("no matter")
 
 
 
