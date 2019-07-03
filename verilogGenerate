@@ -1,0 +1,146 @@
+import os
+import sys
+
+def sw(i):
+    if(i==0):
+        return "posedge H"
+    elif(i==1):
+        return "negedge H"
+    else: 
+        return "*"
+
+class cText:
+    def __init__(self):
+        self.n_module = input("module name : ")
+        self.c_input = int(input("input count : "))
+        self.c_output = int(input("output count : "))
+        self.c_truth = int(input("how many table row :"))
+        self.c_always =  int(input("how many always :"))
+        self.c_assign = int(input("how many assign :"))
+        #self.o_operator = input("operator is : ")
+        #self.o_not = input("not option : ")
+        self.Hinput = []
+        self.tbHinput = []
+        self.chaintbHinput = ""
+        self.Noutput = []
+        self.tbNoutput = []
+        self.tbconnect = []
+        self.tbiftext = []
+
+        self.inputprocess()
+        self.outputprocess()
+        self.inoutprocess()
+
+        self.clip = []
+
+    def inputprocess(self):
+        for i in range(self.c_input):
+            space = "0" if (i//9)==0 else ""
+            self.Hinput.append("H" + space + str(i + 1))
+        for st in self.Hinput:
+            self.tbHinput.append("r_" + st)
+        self.chaintbHinput = '{' + ', '.join(self.tbHinput) + '}'
+    def outputprocess(self):
+        for i in range(self.c_output):
+            space = "0" if (i//9)==0 else ""
+            self.Noutput.append("N" + space + str(i + 1))
+        for st in self.Noutput:
+            self.tbNoutput.append("w_" + st)
+        for st in self.tbNoutput:
+            self.tbiftext.append("(" + st + " == )")
+    def inoutprocess(self):
+        for H, tbH in zip(self.Hinput, self.tbHinput):
+            self.tbconnect.append("." + H + "(" + tbH + ")")
+        for N, tbN in zip(self.Noutput, self.tbNoutput):
+            self.tbconnect.append("." + N + "(" + tbN + ")")
+    def printAllPropaty(self):
+        print()
+        print("*self.n_module : " + self.n_module)
+        print("*self.c_input : " + str(self.c_input))
+        print("*self.c_output : " + str(self.c_output))
+        print("*self.c_truth : " + str(self.c_truth))
+        print("*self.c_always : " + str(self.c_always))
+        print("*self.c_assign : " + str(self.c_assign))
+        print("*self.Hinput : " + str(self.Hinput))
+        print("*self.tbHinput : " + str(self.tbHinput))
+        print("*self.Noutput : " + str(self.Noutput))
+        print("*self.tbNoutput : " + str(self.tbNoutput))
+        print("*self.tbiftext : " + str(self.tbiftext))
+        print("*self.chaintbHinput : " + self.chaintbHinput)
+        print("*self.tbconnect : " + str(self.tbconnect))
+
+    def textout(self):
+        self.clip.append("//module")
+        self.clip.append("module " + self.n_module + "(" + "input " + ', input '.join(self.Hinput) + ", output " + ', output '.join(self.Noutput) + ");")
+        self.clip.append("reg r_1;")
+        for i in range(self.c_always):
+            self.clip.append("always @(" + sw(i) + ") begin")
+            self.clip.append("    if({} == 'b) begin")
+            self.clip.append("        ")
+            self.clip.append("    end")
+            self.clip.append("end")
+        self.clip.append("")
+        for _ in range(self.c_assign):
+            self.clip.append("assign  = ;")
+        self.clip.append("")
+        #self.clip.append("end")
+        self.clip.append("endmodule")
+        self.clip.append("")
+        self.clip.append("")
+        self.clip.append("//testbench")
+        self.clip.append("`timescale 1ps/1ps;")
+        self.clip.append("module tb_" + self.n_module + ";")
+        self.clip.append("")
+        self.clip.append("parameter REP = " + str(self.c_truth) + ";")
+        self.clip.append("parameter STEP = 100;")
+        self.clip.append("")
+        self.clip.append("reg " + ', '.join(self.tbHinput) + ";")
+        self.clip.append("wire " + ', '.join(self.tbNoutput) + ";")
+        self.clip.append("reg rr_1;")
+        self.clip.append("")
+        self.clip.append(self.n_module + " u_" + self.n_module + "(" + ', '.join(self.tbconnect) + ");")
+        self.clip.append("")
+        self.clip.append("initial begin")
+        self.clip.append("    " + self.chaintbHinput + " = " + str(self.c_input) + "'b0;")
+        #self.clip.append("    repeat(REP) begin")
+        zero = ""
+        for _ in range(self.c_input):
+            zero = zero + "0"
+        for i in  range(self.c_truth):
+            self.clip.append("    #STEP " + self.chaintbHinput + " = " + str(self.c_input) + "'b" + zero +"; //" + str(i))
+        #self.clip.append("    end")
+        self.clip.append("    #STEP;")
+        self.clip.append("end")
+        self.clip.append("")
+        self.clip.append("")
+        self.clip.append("initial begin")
+        self.clip.append("    #11;")
+        self.clip.append("    repeat(REP) begin")
+        self.clip.append("        #STEP;")
+        self.clip.append("        if(" + ' & '.join(self.tbiftext) + ") begin")
+        self.clip.append("            $display(\"[ %t]OK!\", $time);")
+        self.clip.append("        end else begin")
+        self.clip.append("            $display(\"[ %t]NG!\", $time);")
+        self.clip.append("            #1;")
+        self.clip.append("          $stop;")
+        self.clip.append("        end")
+        self.clip.append("    end")
+        self.clip.append("end")
+        self.clip.append("endmodule")
+
+
+tex  = cText()
+#tex.printAllPropaty()
+print()
+tex.textout()
+#print(str(tex.clip))
+
+if(True):
+    path = r"C:\Users\iwaha\Documents\practice_6_14\\" + tex.n_module + ".v"
+    with open(path, mode='w') as f:
+        f.write('\n'.join(tex.clip))
+        
+    cmd = 'code '+ tex.n_module +'.v'
+    os.system(cmd)
+
+del tex
